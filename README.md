@@ -1,56 +1,50 @@
 rabbitmq-zabbix
 =======================
 
-Template and checks to monitor rabbitmq queues and server via Zabbix.
+Zabbix 経由で RabbitMQ キューとサーバーをモニタする為のテンプレート。
 
-## WHY:
-Because the SNMP plugin isn't an officially supported plugin, and rabbitmqctl based monitors are REALLY slow in comparison.
+## なぜこれを作ったか:
+SNMP プラグインは公式にサポートされているプラグインではないので、rabbitmqctl ベースのモニタは大変遅いので。
 
-## WHAT:
-Set of python scripts, zabbix template, and associated data to do autodiscovery
+## どんなもの:
+python のスクリプト群、Zabbix テンプレート、及び自動発見の為の関連データ。
 
-## HOW:
-1. Install the files into /etc/zabbix/ folder, change permissions to Zabbix.
-2. Setup configuration (see below)
-3. Import the template to your zabbix server
-4. Make sure zabbix_sender is installed
-5. **WARNING** Watch your process timeout.  I hit an issue with the amount of data and queues in rabbit where processing the results took longer than 3 seconds - that's the default timeout for the agent to kill a process.  If I can switch to a file based push instead of calling send for each item, this will hopefully reduce the time to send even further
-6. Restart the local zabbix agent
+## 使い方:
+1. /etc/zabbix/ フォルダにファイルをインストールし、Zabbix がアクセスできるパーミッションに変える。
+2. 設定を行う（下記参照）
+3. テンプレートを Zabbix サーバーにインポートする。
+4. zabbix_sender がインストールされていることを確認する。
+5. 注意: プロセスがタイムアウトしていないか確認する。処理に3秒以上かかるようなデータやキューが RabbitMQ 内にあるとこの現象が起きることがある。（以下、翻訳省略）
+6. ローカルの zabbix agent を再起動する。
 
-
-## CONFIGURATION:
-You may optionally create a .rab.auth file in the scripts/ directory. This file allows you to change default parameters. The format is `VARIABLE=value`, one per line:
-The default values are as follows:
+## 設定:
+オプションで .rab.auth ファイルを scripts/ ディレクトリ以下に作成しても良い。このファイルでデフォルトパラメータを変更することができる。フォーマットは `変数=値` で、1行に1つ記述できる。デフォルト値は次の通り:
 
     USERNAME=guest
     PASSWORD=guest
     CONF=/etc/zabbix/zabbix_agent.conf
 
-You can also add a filter in this file to restrict which queues are monitored.
-This item is a JSON-encoded string. The format provides some flexibility for
-its use. You can either provide a single object or a list of objects to filter.
-The available keys are: status, node, name, consumers, vhost, durable,
-exclusive_consumer_tag, auto_delete, memory, policy
+このファイルにフィルタを追加することもでき、そうするとどのキューをモニタするかを厳格化できる。このアイテムは JSONでエンコードされた文字列である。使用するのが柔軟になるようなフォーマットになっている。フィルタするために、単一のオブジェクトまたはオブジェクトのリストを設定することもできる。使用可能なキーは、status, node, name, consumers, vhost, durable,
+exclusive_consumer_tag, auto_delete, memory, policy である。
 
-For example, the following filter could find all the durable queues:
+例えば次のフィルタは全ての durable なキューを見つける:
 `FILTER='{"durable": true}'`
 
-To only use the durable queues for a given vhost, the filter would be:
+指定した vhost に対する durable なキューのみに絞る場合は以下の様なフィルタになる:
 `FILTER='{"durable": true, "vhost": "mine"}'`
 
-To supply a list of queue names, the filter would be:
+キュー名のリストを出すには、以下のようなフィルタを設定:
 `FILTER='[{"name": "mytestqueuename"}, {"name": "queue2"}]'`
 
-At some point the filters may be improved to include regular expressions or "ignore these queues"
+将来、フィルタは正規表現や除外したキューを指定できるように改善されるかもしれない。
 
-## CHANGES
-* Updated to use zabbix_sender to push data on request to an item request.  This is similar to how the FromDual MySQL Zabbix stuff works and the concept was pulled from their templates.
-* Updated the filters to handle a list of objects
+## 変更
+* zabbix_sender を用いてデータをリクエストするように更新。（以下翻訳略）
+* オブジェクト一覧を扱えるようにフィルタを更新。
 
-
-## Ideas for the future?
-Add a local cache of the results (may be overkill for RabbitMQ).
-Feel free to submit changes or ideas - mcintoshj@gmail.com
+## 未来のアイデア
+結果をローカルにキャッシュする機能（けど RabbitMQ を殺しすぎるかも）
+アイデアがアレばお気軽に mcintoshj@gmail.com までメールください。
 
 
 ## Definite kudos to some of the other developers around the web.  In particular,
